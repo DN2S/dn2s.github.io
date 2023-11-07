@@ -118,6 +118,19 @@ body {
     text-shadow: 0px 0px 3px #c8c6d0;
 }
 
+.aboutme {
+    font-size: 10px;
+    color: #c8c6d0;
+    width: 50%;
+    position: absolute;
+    top: 85%;
+    transform: translate(50%, -50%);
+    text-align: center;
+    text-shadow: 0px 0px 2px #c8c6d0;
+    opacity: 0.8;
+}
+
+
 .carousel {
     width: 100vw;
     height: 80vh;
