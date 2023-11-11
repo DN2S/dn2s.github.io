@@ -7,6 +7,11 @@
     font-family: Arial, Helvetica, sans-serif;
 }
 
+::selection {
+    background: #c8c6d0;
+    color: #161616;
+}
+
 body {
     margin: 0;
 }
