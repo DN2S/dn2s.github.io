@@ -26,7 +26,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    text-shadow: 0px 0px 3px #c8c6d0;
+    text-shadow: 0px 0px 2px #c8c6d0;
 }
 
 .logo {
@@ -71,7 +71,7 @@ body {
     top: 50%;
     transform: translateY(-50%);
     text-align: center;
-    text-shadow: 0px 0px 3px #c8c6d0;
+    text-shadow: 0px 0px 2px #c8c6d0;
 }
 
 .content a {
@@ -79,7 +79,7 @@ body {
     margin: 0 55px;
     text-decoration: none;
     text-transform: capitalize;
-    text-shadow: 0px 0px 3px #c8c6d0;
+    text-shadow: 0px 0px 2px #c8c6d0;
 }
 
 .content a:hover {
@@ -88,23 +88,23 @@ body {
 }
 
 .content a.lastfm:hover {
-    color: #ff5f64;
-    text-shadow: 0px 0px 5px#ff5f64;
+    color: lightcoral;
+    text-shadow: 0px 0px 4px lightcoral;
 }
 
 .content a.letterboxd:hover {
-    color: #91ff7b;
-    text-shadow: 0px 0px 5px#91ff7b;
+    color: lightgreen;
+    text-shadow: 0px 0px 4px lightgreen;
 }
 
 .content a.mal:hover {
-    color: #3874ff;
-    text-shadow: 0px 0px 5px#3874ff;
+    color: hsl(222, 100%, 71%);
+    text-shadow: 0px 0px 4px hsl(222, 100%, 71%);
 }
 
 .content a.rym:hover {
-    color: #5f98db;
-    text-shadow: 0px 0px 5px#5f98db;
+    color:  lightsteelblue;
+    text-shadow: 0px 0px 4px lightsteelblue;
 }
 
 .footer {
@@ -115,11 +115,11 @@ body {
     top: 98%;
     transform: translateY(-50%);
     text-align: center;
-    text-shadow: 0px 0px 3px #c8c6d0;
+    text-shadow: 0px 0px 2px #c8c6d0;
 }
 
 .aboutme {
-    font-size: 10px;
+    font-size: 11px;
     color: #c8c6d0;
     width: 50%;
     position: absolute;
