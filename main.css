@@ -190,9 +190,9 @@ body {
 }
 
 .carousel-button.prev {
-    left: 1rem;
+    left: 10rem;
 }
 
 .carousel-button.next {
-    right: 1rem;
+    right: 10rem;
 }
