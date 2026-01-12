@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>~</title>
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --term-color: #58a6ff;
+            /* Soft Blue/Green */
+            --term-glow: #58a6ff44;
+            --error-color: #ff7b72;
+            --dir-color: #e4e4e4;
+            /* Purple for directories */
+            --file-color: #79c0ff;
+            /* Blue for files */
+            --cmd-color: #a5d6ff;
+            --font-stack: 'Courier New', Courier, monospace;
+        }
+
+        /* For a Matrix/Classic Green look, uncomment below */
+        /*
+        :root {
+            --bg-color: #000000;
+            --term-color: #00ff00;
+            --term-glow: #00ff0044;
+            --error-color: #ff0000;
+            --dir-color: #00ff00;
+            --file-color: #ccffcc;
+            --cmd-color: #00ff00;
+        }
+        */
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            background-color: var(--bg-color);
+            color: var(--term-color);
+            font-family: var(--font-stack);
+            font-size: 16px;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Scanline effect */
+        body::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 2;
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
+
+        #terminal {
+            padding: 20px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            text-shadow: 0 0 5px var(--term-glow);
+        }
+
+        #output {
+            flex: 1;
+            white-space: pre-wrap;
+            /* Preserve formatting */
+            padding-bottom: 10px;
+        }
+
+        .input-line {
+            display: flex;
+            align-items: center;
+            min-height: 24px;
+        }
+
+        .prompt {
+            color: var(--term-color);
+            margin-right: 10px;
+            font-weight: bold;
+        }
+
+        #cmd-input {
+            background: transparent;
+            border: none;
+            color: var(--cmd-color);
+            font-family: var(--font-stack);
+            font-size: 16px;
+            flex: 1;
+            outline: none;
+            text-shadow: 0 0 5px var(--term-glow);
+        }
+
+        /* Link Styling within Terminal */
+        a {
+            color: var(--file-color);
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        a:hover {
+            background-color: var(--term-color);
+            color: var(--bg-color);
+            text-decoration: none;
+        }
+
+        /* Specific text coloring */
+        .dir {
+            color: var(--dir-color);
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .file {
+            color: var(--file-color);
+            cursor: pointer;
+        }
+
+        .error {
+            color: var(--error-color);
+        }
+
+        .dim {
+            opacity: 0.7;
+        }
+
+        /* Mobile Adjustments */
+        @media (max-width: 600px) {
+            body {
+                font-size: 14px;
+            }
+
+            #cmd-input {
+                font-size: 14px;
+            }
+
+            #terminal {
+                padding: 10px;
+            }
+        }
+
+        /* Custom Scrollbar for Webkit */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-color);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--term-color);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="terminal" onclick="focusInput()">
+        <div id="output"></div>
+        <div class="input-line">
+            <span class="prompt" id="prompt-span">visitor@system:~$</span>
+            <input type="text" id="cmd-input" autocomplete="off" autocorrect="off" autocapitalize="off"
+                spellcheck="false" autofocus>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * CONTENT CONFIGURATION
+         * Edit this object to change the content of your site.
+         */
+        const fileSystem = {
+            'links': {
+                type: 'dir',
+                children: {
+                    'anilist.lnk': { type: 'link', url: 'https://anilist.co/user/izuppako/' },
+                    'letterboxd.lnk': { type: 'link', url: 'https://letterboxd.com/de2s' },
+                    'rateyourmusic.lnk': { type: 'link', url: 'https://rateyourmusic.com/~taintedmind' },
+                    'serializd.lnk': { type: 'link', url: 'https://www.serializd.com/user/izuppako' },
+                    'soundcloud.lnk': { type: 'link', url: 'https://www.soundcloud.com/izuppako' }
+
+                }
+            },
+            'lists': {
+                type: 'dir',
+                children: {
+                    'aural': {
+                        type: 'dir',
+                        children: {
+                            'texture.txt': {
+                                type: 'file',
+                                content: "Pawn - Tone Sketch (2011)\nMarc Leclair - Musique pour 3 femmes enceintes (2005)\nPola - Pola Meets Lyrica (2005)\nCokiyu - Mirror Flake (2007)\nAOKI takamasa + Tujiko Noriko - 28 (2005)\nAOKI takamasa - Indigo Rose (2002)\nAmetsub - The Nothings of the North (2009)\nRyoji Ikeda - Superposition (2021)\nPiana - Ephemeral (2005)\nTakashi Wada - Meguro (2004)\nFiro - Paddle (2003)\nHeoliene - inpulse (2021)\nRyoji Ikeda - Dataplex (2005)\nTangtype - Flake Out (2008)\nVarious Artists - Forma. 1.02 (2002)\nDom Mino' - Unknown Coordinates (2009)\nAOKI takamasa - Parabolica (2006)\nOZmotic + Fennesz - Senzatempo (2023)\nSogar - Apikal.Blend (2003)"
+                            },
+                            'rhythm.txt': {
+                                type: 'file',
+                                content: "Akufen - My Way (2002)\nBasic Channel - Quadrant Dub (1994)\nRod Modell - Vibrasound (The Deepchord Years 1999-2004) (2004)\nShinichi Atobe - Ship-Scope / Plug and Delay / Rainstick / The Red Line (2001)\nTerry Lee Brown Junior - From Dub Til Dawn (2000)\nGAS - Königsforst (1998)\nChristian Linder - Ultramagnetic (2001)\nLusine - Serial Hodgepodge (2004)\nMichael Mayer - Immer (2002)\nNao Tokui - Mind the Gap (2003)\nVarious Artists - INIT001 (2015)\nDeepchord Presents Echospace - Liumin (2010)\nGramm - (Personal_Rock) (1999)\nRei Harakami - [lust] (2005)\nBasic Channel - Radiance (1994)\nChristian Linder - Circular Motion (2002)\nSkee Mask - Compro (2018)\nVarious Artists - Trans-Central Connection (1996)\nVarious Artists - Kanzleramt Three (2003)"
+                            }
+                        }
+                    },
+                    'visual': {
+                        type: 'dir',
+                        children: {
+                            'anime.txt': {
+                                type: 'file',
+                                content: "ARIA The ANIMATION\nGankutsuou\nMononoke\nMONSTER\nMushishi\nOne Outs\nMonogatari Series\nSaraiya Goyou\nShoujo Kakumei Utena\nTEXHNOLYZE\nYojouhan Shinwa Taikei"
+                            },
+                            'film.txt': {
+                                type: 'file',
+                                content: "Conte d'été (1996)\nDillinger è morto (1969)\nHiroshima Mon Amour (1959)\nDans la ville blanche (1983)\nOrphée (1950)\nSans Soleil (1983)\nՆռան գույնը (1969)\n早池峰の賦 (1982)\n満山紅柿 (2001)\n秋刀魚の味 (1962)"
+                            },
+                            'tv.txt': {
+                                type: 'file',
+                                content: "\nAndor (2022)\nBeach Boys (1997)\nEyes of Dawn (1991)\nKisarazu Cat's Eye (2002)\nLong Vacation (1996)\nSandglass (1995)\nSaving My Stupid Youth (2014)\nSeverance (2022)\nTiger and Dragon (2005)"
+                            }
+                        }
+                    }
+                }
+            }
+
+        };
+
+        /**
+         * SYSTEM VARIABLES
+         */
+        let currentPath = []; // Empty array = root
+        const outputDiv = document.getElementById('output');
+        const inputField = document.getElementById('cmd-input');
+        const promptSpan = document.getElementById('prompt-span');
+
+        // Initial Boot
+        window.onload = () => {
+            printLine("Initializing...", "dim");
+            setTimeout(() => {
+                printLine("Welcome. Type 'help' for commands.");
+                printLine("Hint: You can click directory names to navigate.");
+            }, 500);
+        };
+
+        /**
+         * CORE FUNCTIONS
+         */
+
+        function focusInput() {
+            inputField.focus();
+        }
+
+        // Resolve the current directory object based on currentPath
+        function getCurrentDirObject() {
+            let current = fileSystem;
+            for (const segment of currentPath) {
+                if (current[segment] && current[segment].children) {
+                    current = current[segment].children;
+                } else {
+                    return null; // Error state
+                }
+            }
+            return current;
+        }
+
+        function updatePrompt() {
+            const pathStr = currentPath.length === 0 ? '~' : '~/' + currentPath.join('/');
+            promptSpan.innerText = `visitor@izu:${pathStr}$`;
+        }
+
+        function printLine(text, className = '') {
+            const div = document.createElement('div');
+            div.className = className;
+            // Check if text contains newlines, translate to <br>
+            div.innerHTML = text.replace(/\n/g, '<br>');
+            outputDiv.appendChild(div);
+            window.scrollTo(0, document.body.scrollHeight);
+        }
+
+        /**
+         * COMMAND PROCESSING
+         */
+
+        inputField.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                const val = inputField.value.trim();
+                if (val) {
+                    printLine(promptSpan.innerText + ' ' + val, 'dim');
+                    executeCommand(val);
+                }
+                inputField.value = '';
+            } else if (e.key === 'Tab') {
+                e.preventDefault();
+                handleTabCompletion(inputField.value);
+            }
+        });
+
+        function executeCommand(cmdStr) {
+            const parts = cmdStr.split(' ');
+            const cmd = parts[0].toLowerCase();
+            const arg = parts.slice(1).join(' ');
+
+            switch (cmd) {
+                case 'help':
+                    printLine("Available commands:");
+                    printLine("  ls           - List directory contents");
+                    printLine("  cd [dir]     - Change directory (use '..' to go back)");
+                    printLine("  view [file]  - View file content (alias: cat)");
+                    printLine("  open [link]  - Open external link");
+                    printLine("  clear        - Clear terminal");
+                    break;
+
+                case 'ls':
+                    const dirObj = getCurrentDirObject();
+                    if (!dirObj) { printLine("Error: System path corrupted.", "error"); return; }
+
+                    const items = Object.keys(dirObj).map(key => {
+                        const item = dirObj[key];
+                        if (item.type === 'dir') return `<span class="dir" onclick="runCmd('cd ${key}')">${key}/</span>`;
+                        if (item.type === 'link') return `<span class="file" onclick="runCmd('open ${key}')">${key}*</span>`;
+                        return `<span class="file" onclick="runCmd('view ${key}')">${key}</span>`;
+                    });
+
+                    if (items.length === 0) printLine("(empty directory)", "dim");
+                    else printLine(items.join('  '));
+                    break;
+
+                case 'cd':
+                    if (!arg || arg === '~') {
+                        currentPath = [];
+                    } else if (arg === '..') {
+                        currentPath.pop();
+                    } else {
+                        const currentDir = getCurrentDirObject();
+                        if (currentDir[arg] && currentDir[arg].type === 'dir') {
+                            currentPath.push(arg);
+                        } else {
+                            printLine(`cd: ${arg}: No such directory`, "error");
+                        }
+                    }
+                    updatePrompt();
+                    break;
+
+                case 'cat':
+                case 'view':
+                    const fileDir = getCurrentDirObject();
+                    if (fileDir[arg]) {
+                        if (fileDir[arg].type === 'file') {
+                            printLine(fileDir[arg].content);
+                        } else if (fileDir[arg].type === 'link') {
+                            printLine(`Error: ${arg} is a link. Use 'open' instead.`, "error");
+                        } else {
+                            printLine(`Error: ${arg} is a directory.`, "error");
+                        }
+                    } else {
+                        printLine(`view: ${arg}: No such file`, "error");
+                    }
+                    break;
+
+                case 'open':
+                    const linkDir = getCurrentDirObject();
+                    if (linkDir[arg] && linkDir[arg].type === 'link') {
+                        printLine(`Opening ${arg}...`, "dim");
+                        window.open(linkDir[arg].url, '_blank');
+                    } else {
+                        printLine(`open: ${arg}: Not a valid link object`, "error");
+                    }
+                    break;
+
+                case 'clear':
+                    outputDiv.innerHTML = '';
+                    break;
+
+                default:
+                    printLine(`Command not found: ${cmd}`, "error");
+            }
+        }
+
+        // Helper to allow clicking on items to execute commands
+        window.runCmd = function (cmd) {
+            inputField.value = cmd;
+            // Small delay to make it feel like user typed it
+            inputField.focus();
+            executeCommand(cmd);
+            inputField.value = '';
+        }
+
+        function handleTabCompletion(currentInput) {
+            const parts = currentInput.split(' ');
+            const cmd = parts[0];
+            const partialArg = parts[1] || '';
+
+            if (!['cd', 'view', 'cat', 'open'].includes(cmd)) return;
+
+            const dirObj = getCurrentDirObject();
+            const matches = Object.keys(dirObj).filter(k => k.startsWith(partialArg));
+
+            if (matches.length === 1) {
+                inputField.value = `${cmd} ${matches[0]}`;
+            } else if (matches.length > 1) {
+                printLine(matches.join('  '), 'dim');
+            }
+        }
+    </script>
+
+</body>
+
+</html>
